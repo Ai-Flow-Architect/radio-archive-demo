@@ -378,9 +378,9 @@ $("app").addEventListener("click", async e => {
     const [a, b] = d.useseg.split("_").map(Number); const f = st.files.find(x => x.id === st.sel) || st.files[0];
     st.guest = $("guestName") ? $("guestName").value : f.guest; st.date = f.date; st.tab = "cut";
     if (!st.audio) await setAudio(await makeSample());
-    const dur = st.audio.buffer.duration, scale = st.audio.own ? 1 : dur / 1500;
+    const dur = st.audio.buffer.duration, scale = st.audio.own && b <= dur ? 1 : dur / 1500;
     st.start = Math.min(dur - 1, a * scale); st.end = Math.min(dur, Math.max(st.start + 1, b * scale));
-    st.msg = st.audio.own ? "" : "見本の音は60秒のため、区間を縮めて当てています。"; render();
+    st.msg = scale === 1 ? "" : "読み込んだ音声が見本の放送より短いため、区間を縮めて当てています。"; render();
   }
   else if (t.id === "unify") { const v = $("guestName").value.trim(); const f = st.files.find(x => x.id === st.sel); if (v && f) { st.files.filter(x => x.guest.replace(/\s/g, "") === f.guest.replace(/\s/g, "")).forEach(x => x.guest = v); } render(); }
   else if (t.id === "sample") { await setAudio(await makeSample()); }
@@ -392,7 +392,7 @@ $("app").addEventListener("click", async e => {
     if (typeof lamejs === "undefined") { st.err = "MP3の書き出し部品を読み込めませんでした。通信を確かめて、もう一度押してください。"; render(); return; }
     const blob = toMp3(await renderClip()); const name = fileBase() + "_" + mmss(st.start).replace(/[:.]/g, "") + ".mp3";
     window.__lastExport = { size: blob.size, name }; download(blob, name);
-    st.msg = "書き出しました：" + esc(name) + "（" + Math.round(blob.size / 1024) + " KB・" + st.kbps + " kbps・フェードイン " + st.fadeIn + " 秒／アウト " + st.fadeOut + " 秒）"; render();
+    st.msg = "書き出しました：" + esc(name) + "（" + Math.round(blob.size / 1024) + " KB・" + st.kbps + " kbps・フェードイン " + Math.min(st.fadeIn, (st.end - st.start) / 2) + " 秒／アウト " + Math.min(st.fadeOut, (st.end - st.start) / 2) + " 秒）"; render();
   }
   else if (d.tpl) { st.tpl = d.tpl; render(); }
   else if (t.id === "noPhoto") { photoImg = null; render(); }
